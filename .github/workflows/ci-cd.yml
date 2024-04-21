@@ -1,0 +1,52 @@
+name: CaffeineCoder-GitHibActions
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "src/**" # React source files
+      - "public/**" # Public assets
+      - "tailwind.config.js" # Tailwind CSS configuration
+      - "postcss.config.js" # PostCSS configuration
+      - "package.json" # Dependencies
+      - "package-lock.json" # Dependency lock file (if using npm)
+      - "yarn.lock" # Dependency lock file (if using yarn)
+      - ".github/workflows/**" # Workflow files
+
+jobs:
+  # Build Job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Install Dependencies
+        run: npm install
+      - name: Build Project
+        run: npm run build
+      - name: Upload artifact to enable deployment
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-files
+          path: ./dist
+  # Deploy Job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: production-files
+          path: ./dist
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.CAFFEINECODER_TOKEN }}
+          publish_dir: ./dist
